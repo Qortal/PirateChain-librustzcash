@@ -13,6 +13,7 @@ use crate::{
     consensus,
     keys::OutgoingViewingKey,
     legacy::TransparentAddress,
+    legacy::Script,
     merkle_tree::MerklePath,
     note_encryption::{generate_esk, Memo, SaplingNoteEncryption},
     prover::TxProver,
@@ -414,6 +415,25 @@ impl<R: RngCore + CryptoRng> Builder<R> {
         self.mtx.vout.push(TxOut {
             value,
             script_pubkey: to.script(),
+        });
+
+        Ok(())
+    }
+
+    /// Adds a transparent address to send funds to, using supplied script pubkey
+    pub fn add_transparent_output_with_script_pubkey(
+        &mut self,
+        to: &TransparentAddress,
+        value: Amount,
+        script_pubkey: Script,
+    ) -> Result<(), Error> {
+        if value.is_negative() {
+            return Err(Error::InvalidAmount);
+        }
+
+        self.mtx.vout.push(TxOut {
+            value,
+            script_pubkey
         });
 
         Ok(())
