@@ -28,7 +28,6 @@ use crate::{
 
 #[cfg(feature = "transparent-inputs")]
 use crate::{
-    legacy::Script,
     transaction::components::{OutPoint, TxIn},
 };
 
