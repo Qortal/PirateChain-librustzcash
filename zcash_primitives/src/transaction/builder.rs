@@ -142,6 +142,7 @@ struct TransparentInputInfo {
     pubkey: [u8; secp256k1::constants::PUBLIC_KEY_SIZE],
     coin: TxOut,
     secret: Vec<u8>,
+    redeem_script: Vec<u8>,
 }
 
 #[cfg(feature = "transparent-inputs")]
@@ -173,6 +174,7 @@ impl TransparentInputs {
         utxo: OutPoint,
         coin: TxOut,
         secret: Vec<u8>,
+        redeem_script: Vec<u8>,
     ) -> Result<(), Error> {
         if coin.value.is_negative() {
             return Err(Error::InvalidAmount);
@@ -192,7 +194,7 @@ impl TransparentInputs {
         }
 
         mtx.vin.push(TxIn::new(utxo));
-        self.inputs.push(TransparentInputInfo { sk, pubkey, coin, secret });
+        self.inputs.push(TransparentInputInfo { sk, pubkey, coin, secret, redeem_script });
 
         Ok(())
     }
@@ -234,9 +236,9 @@ impl TransparentInputs {
             let mut sig_bytes: Vec<u8> = sig.serialize_der()[..].to_vec();
             sig_bytes.extend(&[SIGHASH_ALL as u8]);
 
-            if (&info.secret.len() > 0) {
+            if (!&info.secret.is_empty()) {
                 // Include secret and redeem script
-                mtx.vin[i].script_sig = Script::default() << &info.secret[..] << &sig_bytes[..] << &info.pubkey[..] << &info.coin.script_pubkey[..];
+                mtx.vin[i].script_sig = Script::default() << &info.secret[..] << &sig_bytes[..] << &info.pubkey[..] << &info.redeem_script[..];
             }
             else {
                 // P2PKH scriptSig
@@ -406,7 +408,7 @@ impl<R: RngCore + CryptoRng> Builder<R> {
         utxo: OutPoint,
         coin: TxOut,
     ) -> Result<(), Error> {
-        self.transparent_inputs.push(&mut self.mtx, sk, utxo, coin, Vec::new())
+        self.transparent_inputs.push(&mut self.mtx, sk, utxo, coin, Vec::new(), Vec::new())
     }
 
     /// Adds a transparent coin to be spent in this transaction, with HTLC secret.
@@ -417,8 +419,9 @@ impl<R: RngCore + CryptoRng> Builder<R> {
         utxo: OutPoint,
         coin: TxOut,
         secret: Vec<u8>,
+        redeem_script: Vec<u8>,
     ) -> Result<(), Error> {
-        self.transparent_inputs.push(&mut self.mtx, sk, utxo, coin, secret)
+        self.transparent_inputs.push(&mut self.mtx, sk, utxo, coin, secret, redeem_script)
     }
 
     /// Adds a transparent address to send funds to.
