@@ -181,17 +181,18 @@ impl TransparentInputs {
         }
 
         let pubkey = secp256k1::PublicKey::from_secret_key(&self.secp, &sk).serialize();
-        match coin.script_pubkey.address() {
-            Some(TransparentAddress::PublicKey(hash)) => {
-                use ripemd160::Ripemd160;
-                use sha2::{Digest, Sha256};
+        // Disabled as P2SH address isn't linked with redeemer's public key
+        // match coin.script_pubkey.address() {
+        //     Some(TransparentAddress::PublicKey(hash)) => {
+        //         use ripemd160::Ripemd160;
+        //         use sha2::{Digest, Sha256};
 
-                if &hash[..] != &Ripemd160::digest(&Sha256::digest(&pubkey))[..] {
-                    return Err(Error::InvalidAddress);
-                }
-            }
-            _ => return Err(Error::InvalidAddress),
-        }
+        //         if &hash[..] != &Ripemd160::digest(&Sha256::digest(&pubkey))[..] {
+        //             return Err(Error::InvalidAddress);
+        //         }
+        //     }
+        //     _ => return Err(Error::InvalidAddress),
+        // }
 
         mtx.vin.push(TxIn::new(utxo));
         self.inputs.push(TransparentInputInfo { sk, pubkey, coin, secret, redeem_script });
