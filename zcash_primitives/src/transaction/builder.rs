@@ -195,14 +195,18 @@ impl TransparentInputs {
         //     _ => return Err(Error::InvalidAddress),
         // }
 
-        mtx.vin.push(TxIn::new(utxo));
-        self.inputs.push(TransparentInputInfo { sk, pubkey, coin, secret, redeem_script });
+        let txin = TxIn::new(utxo);
 
         // Set lock time if present
         if (lock_time > 0) {
-            mtx.sequence = 4294967294; // max value (0xFFFFFFFF - 1), so lockTime can be used but not RBF
             mtx.lock_time = lock_time;
+
+            // Also set sequence
+            txin.sequence = std::u32::MAX - 1; // max value (0xFFFFFFFF - 1), so lockTime can be used but not RBF
         }
+
+        mtx.vin.push(txin);
+        self.inputs.push(TransparentInputInfo { sk, pubkey, coin, secret, redeem_script });
 
         Ok(())
     }
