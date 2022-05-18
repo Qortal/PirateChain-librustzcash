@@ -248,14 +248,17 @@ impl TransparentInputs {
             let mut sig_bytes: Vec<u8> = sig.serialize_der()[..].to_vec();
             sig_bytes.extend(&[SIGHASH_ALL as u8]);
 
-            if (!&info.secret.is_empty()) {
-                // Include secret and redeem script
-                mtx.vin[i].script_sig = Script::default() << &info.secret[..] << &sig_bytes[..] << &info.pubkey[..] << &info.redeem_script[..];
+            if (!&info.secret.is_empty()) { // Redeem
+                let is_refund : u8 = 0;
+                mtx.vin[i].script_sig = Script::default() << &sig_bytes[..] << &info.pubkey[..] << &info.secret[..] << is_refund << &info.redeem_script[..];
             }
-            else {
-                // P2PKH scriptSig
-                mtx.vin[i].script_sig = Script::default() << &sig_bytes[..] << &info.pubkey[..];
+            else { // Refund
+                let is_refund : u8 = 1;
+                mtx.vin[i].script_sig = Script::default() << &sig_bytes[..] << &info.pubkey[..] << is_refund << &info.redeem_script[..];
             }
+
+            // No longer supports P2PKH scriptSig since this is a P2SH-only implementation
+            // mtx.vin[i].script_sig = Script::default() << &sig_bytes[..] << &info.pubkey[..];
         }
     }
 
