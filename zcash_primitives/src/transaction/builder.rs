@@ -195,7 +195,7 @@ impl TransparentInputs {
         //     _ => return Err(Error::InvalidAddress),
         // }
 
-        let txin = TxIn::new(utxo);
+        let mut txin = TxIn::new(utxo);
 
         // Set lock time if present
         if (lock_time > 0) {
