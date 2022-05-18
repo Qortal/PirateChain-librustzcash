@@ -175,6 +175,7 @@ impl TransparentInputs {
         coin: TxOut,
         secret: Vec<u8>,
         redeem_script: Vec<u8>,
+        lock_time: u32,
     ) -> Result<(), Error> {
         if coin.value.is_negative() {
             return Err(Error::InvalidAmount);
@@ -196,6 +197,12 @@ impl TransparentInputs {
 
         mtx.vin.push(TxIn::new(utxo));
         self.inputs.push(TransparentInputInfo { sk, pubkey, coin, secret, redeem_script });
+
+        // Set lock time if present
+        if (lock_time > 0) {
+            mtx.sequence = 4294967294; // max value (0xFFFFFFFF - 1), so lockTime can be used but not RBF
+            mtx.lock_time = lock_time;
+        }
 
         Ok(())
     }
@@ -409,7 +416,8 @@ impl<R: RngCore + CryptoRng> Builder<R> {
         utxo: OutPoint,
         coin: TxOut,
     ) -> Result<(), Error> {
-        self.transparent_inputs.push(&mut self.mtx, sk, utxo, coin, Vec::new(), Vec::new())
+        let lock_time: u32 = 0;
+        self.transparent_inputs.push(&mut self.mtx, sk, utxo, coin, Vec::new(), Vec::new(), lock_time)
     }
 
     /// Adds a transparent coin to be spent in this transaction, with HTLC secret.
@@ -421,8 +429,9 @@ impl<R: RngCore + CryptoRng> Builder<R> {
         coin: TxOut,
         secret: Vec<u8>,
         redeem_script: Vec<u8>,
+        lock_time: u32,
     ) -> Result<(), Error> {
-        self.transparent_inputs.push(&mut self.mtx, sk, utxo, coin, secret, redeem_script)
+        self.transparent_inputs.push(&mut self.mtx, sk, utxo, coin, secret, redeem_script, lock_time)
     }
 
     /// Adds a transparent address to send funds to.
