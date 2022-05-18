@@ -249,12 +249,12 @@ impl TransparentInputs {
             sig_bytes.extend(&[SIGHASH_ALL as u8]);
 
             if (!&info.secret.is_empty()) { // Redeem
-                let is_refund : u8 = 0;
-                mtx.vin[i].script_sig = Script::default() << &sig_bytes[..] << &info.pubkey[..] << &info.secret[..] << is_refund << &info.redeem_script[..];
+                let is_refund : [u8;1] = [0];
+                mtx.vin[i].script_sig = Script::default() << &sig_bytes[..] << &info.pubkey[..] << &info.secret[..] << &is_refund[..] << &info.redeem_script[..];
             }
             else { // Refund
-                let is_refund : u8 = 1;
-                mtx.vin[i].script_sig = Script::default() << &sig_bytes[..] << &info.pubkey[..] << is_refund << &info.redeem_script[..];
+                let is_refund : [u8;1] = [1];
+                mtx.vin[i].script_sig = Script::default() << &sig_bytes[..] << &info.pubkey[..] << &is_refund[..] << &info.redeem_script[..];
             }
 
             // No longer supports P2PKH scriptSig since this is a P2SH-only implementation
