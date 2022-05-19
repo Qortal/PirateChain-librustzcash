@@ -249,11 +249,11 @@ impl TransparentInputs {
             sig_bytes.extend(&[SIGHASH_ALL as u8]);
 
             if (!&info.secret.is_empty()) { // Redeem
-                let is_refund : [u8;1] = [0];
+                let is_refund : [u8;1] = [0]; // 0x00 (OP_FALSE)
                 mtx.vin[i].script_sig = Script::default() << &sig_bytes[..] << &info.pubkey[..] << &info.secret[..] << &is_refund[..] << &info.redeem_script[..];
             }
             else { // Refund
-                let is_refund : [u8;1] = [1];
+                let is_refund : [u8;1] = [81]; // 0x51 (OP_TRUE)
                 mtx.vin[i].script_sig = Script::default() << &sig_bytes[..] << &info.pubkey[..] << &is_refund[..] << &info.redeem_script[..];
             }
 
